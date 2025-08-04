@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'audit_finding_escalations',
     timestamps: true,
+    underscored: true,
   });
 
   AuditFindingEscalation.associate = (models) => {

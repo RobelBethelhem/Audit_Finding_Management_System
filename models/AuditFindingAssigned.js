@@ -46,7 +46,11 @@ module.exports = (sequelize, DataTypes) => {
       });
       AuditFindingAssigned.belongsTo(models.User, {
         foreignKey: 'assigned_to_id',
-        as: 'assignedToUser'  // Changed from 'assignedTo' to 'assignedToUser'
+        as: 'assignedToUser'
+      });
+      AuditFindingAssigned.belongsTo(models.User, {
+        foreignKey: 'assigned_by_id',
+        as: 'assignedByUser'
       });
     }
   }
@@ -73,6 +77,14 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
+    assigned_by_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
     assigned_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -92,6 +104,10 @@ module.exports = (sequelize, DataTypes) => {
       {
         fields: ['assigned_to_id'],
         name: 'idx_audit_finding_assigned_user'
+      },
+      {
+        fields: ['assigned_by_id'],
+        name: 'idx_audit_finding_assigned_by_user'
       },
       {
         fields: ['finding_id', 'assigned_to_id'],

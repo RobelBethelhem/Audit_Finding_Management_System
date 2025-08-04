@@ -1,80 +1,50 @@
-// const { v4: uuidv4 } = require('uuid');
-
-// module.exports = (sequelize, DataTypes) => {
-//   const ActionPlan = sequelize.define('ActionPlan', {
-//     action_plan_id: {
-//       type: DataTypes.UUID,
-//       defaultValue: () => uuidv4(),
-//       primaryKey: true,
-//     },
-//     audit_finding_id: {
-//       type: DataTypes.UUID,
-//       allowNull: false,
-//     },
-//     action_plan: {
-//       type: DataTypes.TEXT,
-//       allowNull: false,
-//     },
-//     timeline: {
-//       type: DataTypes.DATE,
-//       allowNull: false,
-//     },
-//     status: {
-//       type: DataTypes.ENUM('Pending', 'In_Progress', 'Completed', 'Overdue'),
-//       defaultValue: 'Pending',
-//       allowNull: false,
-//     },
-//     submitted_by_id: {
-//       type: DataTypes.UUID,
-//       allowNull: false,
-//     },
-//   }, {
-//     tableName: 'action_plans',
-//     timestamps: true,
-//   });
-
-//   ActionPlan.associate = (models) => {
-//     ActionPlan.belongsTo(models.AuditFinding, { foreignKey: 'audit_finding_id' });
-//     ActionPlan.belongsTo(models.User, { as: 'submittedBy', foreignKey: 'submitted_by_id' });
-//     ActionPlan.hasMany(models.ActionPlanResponsiblePerson, { foreignKey: 'action_plan_id' });
-//     ActionPlan.hasMany(models.ActionPlanResource, { foreignKey: 'action_plan_id' });
-//     ActionPlan.hasMany(models.ActionPlanEvidence, { foreignKey: 'action_plan_id' });
-//     ActionPlan.hasMany(models.ActionPlanAmendmentHistory, { foreignKey: 'action_plan_id' });
-//   };
-
-//   return ActionPlan;
-// }; 
-
-'use strict';
+// models/ActionPlan.js
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class ActionPlan extends Model {
     static associate(models) {
-      ActionPlan.belongsTo(models.AuditFinding, {
-        foreignKey: 'audit_finding_id',
-        as: 'auditFinding'
-      });
-      ActionPlan.belongsTo(models.User, {
-        foreignKey: 'submitted_by_id',
-        as: 'submittedBy'
-      });
-      ActionPlan.hasMany(models.ActionPlanResponsiblePerson, {
-        foreignKey: 'action_plan_id',
-        as: 'responsiblePersons'
-      });
-      ActionPlan.hasMany(models.ActionPlanResource, {
-        foreignKey: 'action_plan_id',
-        as: 'resources'
-      });
-      ActionPlan.hasMany(models.ActionPlanEvidence, {
-        foreignKey: 'action_plan_id',
-        as: 'evidences'
-      });
-      ActionPlan.hasMany(models.ActionPlanAmendmentHistory, {
-        foreignKey: 'action_plan_id',
-        as: 'amendmentHistory'
-      });
+      // Check if models exist before creating associations
+      if (models.User) {
+        ActionPlan.belongsTo(models.User, {
+          foreignKey: 'submitted_by_id',
+          as: 'submittedBy'
+        });
+      }
+      
+      if (models.AuditFinding) {
+        ActionPlan.belongsTo(models.AuditFinding, {
+          foreignKey: 'audit_finding_id'
+        });
+      }
+      
+      if (models.ActionPlanResponsiblePerson) {
+        ActionPlan.hasMany(models.ActionPlanResponsiblePerson, {
+          foreignKey: 'action_plan_id',
+          as: 'responsiblePersons'
+        });
+      }
+      
+      if (models.ActionPlanResource) {
+        ActionPlan.hasMany(models.ActionPlanResource, {
+          foreignKey: 'action_plan_id',
+          as: 'resources'
+        });
+      }
+      
+      if (models.ActionPlanEvidence) {
+        ActionPlan.hasMany(models.ActionPlanEvidence, {
+          foreignKey: 'action_plan_id',
+          as: 'evidences'
+        });
+      }
+      
+      if (models.ActionPlanAmendmentHistory) {
+        ActionPlan.hasMany(models.ActionPlanAmendmentHistory, {
+          foreignKey: 'action_plan_id',
+          as: 'amendmentHistory'
+        });
+      }
     }
   }
 
@@ -86,32 +56,41 @@ module.exports = (sequelize, DataTypes) => {
     },
     audit_finding_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'audit_findings',
-        key: 'id'
-      }
+      allowNull: false
     },
     action_plan: {
       type: DataTypes.TEXT,
       allowNull: false
     },
     timeline: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    due_date: {
       type: DataTypes.DATE,
-      allowNull: false
+      allowNull: true
     },
     status: {
-      type: DataTypes.ENUM('Pending', 'In_Progress', 'Completed', 'Overdue'),
+      type: DataTypes.ENUM('Pending', 'Overdue', 'In_Progress', 'Completed'),
       defaultValue: 'Pending',
       allowNull: false
     },
     submitted_by_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
+      allowNull: false
+    },
+    progress_percentage: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+      validate: {
+        min: 0,
+        max: 100
       }
+    },
+    progress_justification: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
     sequelize,
@@ -119,20 +98,18 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'action_plans',
     underscored: true,
     timestamps: true,
-    indexes: [
-      {
-        fields: ['audit_finding_id']
-      },
-      {
-        fields: ['submitted_by_id']
-      },
-      {
-        fields: ['status']
-      },
-      {
-        fields: ['timeline']
+    defaultScope: {
+      attributes: {
+        exclude: ['primary_evidence_id', 'primary_resource_id']
       }
-    ]
+    },
+    scopes: {
+      withoutEvidenceResource: {
+        attributes: {
+          exclude: ['primary_evidence_id', 'primary_resource_id']
+        }
+      }
+    }
   });
 
   return ActionPlan;

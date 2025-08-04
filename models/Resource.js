@@ -1,42 +1,55 @@
-const { v4: uuidv4 } = require('uuid');
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const Resource = sequelize.define('Resource', {
+  class Resource extends Model {
+    static associate(models) {
+      Resource.hasMany(models.ActionPlan, {
+        foreignKey: 'primary_resource_id',
+        as: 'actionPlans'
+      });
+      Resource.hasMany(models.ActionPlanResource, {
+        foreignKey: 'resource_id',
+        as: 'actionPlanResources'
+      });
+    }
+  }
+
+  Resource.init({
     id: {
       type: DataTypes.UUID,
-      primaryKey: true,
-      defaultValue: () => uuidv4()
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
     },
     file_path: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false
+    },
+    file_name: {
+      type: DataTypes.STRING,
+      allowNull: true
     },
     file_type: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false
     },
     file_size: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
+      type: DataTypes.INTEGER,
+      allowNull: true
     },
     resource_body: {
-      type: DataTypes.STRING,
-      allowNull: true,
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     resource_type: {
-      type: DataTypes.ENUM('Resource', 'Evidence'),
-      defaultValue: 'Resource'
+      type: DataTypes.STRING,
+      allowNull: true
     }
-
   }, {
+    sequelize,
+    modelName: 'Resource',
     tableName: 'resources',
-    timestamps: true,
-    indexes: [
-      {
-        fields: ['file_path'],
-        name: 'idx_resource_file_path'
-      }
-    ]
+    underscored: true,
+    timestamps: true
   });
 
   return Resource;

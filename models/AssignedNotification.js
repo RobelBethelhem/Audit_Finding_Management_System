@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     tableName: 'assigned_notifications',
+    underscored: true,
     timestamps: true,
   });
 

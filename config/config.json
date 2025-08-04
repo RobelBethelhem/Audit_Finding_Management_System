@@ -1,0 +1,24 @@
+{
+    "development": {
+      "username": "root",
+      "password": "",
+      "database": "zemen_audit",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "test": {
+      "username": "root",
+      "password": "",
+      "database": "zemen_audit",
+      "host": "localhost",
+      "dialect": "mysql"
+    },
+    "production": {
+      "username": "root",
+      "password": "",
+      "database": "zemen_audit",
+      "host": "localhost",
+      "dialect": "mysql"
+    }
+  }
+  

@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 const BaseController = require('./BaseController');
-const { User } = require('../models');
+const { User, Branch } = require('../models');
 const TokenService = require('../services/tokenService');
 
 class UserController extends BaseController {
@@ -46,7 +46,7 @@ class UserController extends BaseController {
         password: hashedPassword,
         role,
         department,
-        supervisor_id,
+        supervisor: supervisor_id || null, // Convert empty string to null
         is_active: true
       });
 
@@ -64,12 +64,18 @@ class UserController extends BaseController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { password, ...updateData } = req.body;
+      console.log("IIIIIIDDDDDD", id);
+      const { password, supervisor_id, ...updateData } = req.body;
 
       // Find user
       const user = await User.findByPk(id);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Map supervisor_id to supervisor field
+      if (supervisor_id !== undefined) {
+        updateData.supervisor = supervisor_id || null; // Convert empty string to null
       }
 
       // Hash new password if provided
@@ -127,14 +133,22 @@ class UserController extends BaseController {
       
       if (search) {
         where[Op.or] = [
-          { username: { [Op.iLike]: `%${search}%` } },
-          { email: { [Op.iLike]: `%${search}%` } },
+          { username: { [Op.like]: `%${search}%` } },
+          { email: { [Op.like]: `%${search}%` } },
         ];
       }
 
       const { count, rows } = await User.findAndCountAll({
         where,
         attributes: { exclude: ['password'] },
+        include: [
+          {
+            model: Branch,
+            as: 'branch',
+            attributes: ['id', 'branch_code', 'branch_name', 'is_active'],
+            required: false
+          }
+        ],
         limit: parseInt(limit),
         offset: parseInt(offset),
         order: [['created_at', 'DESC']]
@@ -162,8 +176,14 @@ class UserController extends BaseController {
         include: [
           {
             model: User,
-            as: 'supervisor',
+            as: 'mySupervisor',
             attributes: ['id', 'username', 'email']
+          },
+          {
+            model: Branch,
+            as: 'branch',
+            attributes: ['id', 'branch_code', 'branch_name', 'is_active'],
+            required: false
           }
         ]
       });
@@ -316,7 +336,15 @@ async login(req, res) {
   async getProfile(req, res) {
     try {
       const user = await User.findByPk(req.user.id, {
-        attributes: { exclude: ['password'] }
+        attributes: { exclude: ['password'] },
+        include: [
+          {
+            model: Branch,
+            as: 'branch',
+            attributes: ['id', 'branch_code', 'branch_name', 'is_active'],
+            required: false
+          }
+        ]
       });
   
       if (!user) {
@@ -366,7 +394,7 @@ async login(req, res) {
     try {
       const { role } = req.params;
       const users = await User.findAll({
-        where: { 
+        where: {
           role,
           is_active: true
         },
@@ -380,6 +408,146 @@ async login(req, res) {
       res.status(500).json({ error: 'Error fetching users by role' });
     }
   }
+
+
+
+  
+  // Get assignable users in the same department (for assignment purposes)
+  async getAssignableUsers(req, res) {
+    try {
+      const currentUser = req.user;
+      const { limit = 1000, is_active = true } = req.query;
+
+      // Define assignable roles
+      const assignableRoles = ['Auditees', 'IT_Auditees', 'Inspection_Auditees'];
+
+      // Build department filter based on current user's department
+      let departmentFilter;
+      if (currentUser.department === 'Inspection') {
+        // Inspection users can see users from Business and Inspection departments (exclude IT_Audit)
+        departmentFilter = { [Op.in]: ['Business', 'Inspection'] };
+      } else {
+        // All other departments: show users from same department only
+        departmentFilter = currentUser.department;
+      }
+
+      const users = await User.findAll({
+        where: {
+          department: departmentFilter,
+          role: { [Op.in]: assignableRoles },
+          is_active: is_active === 'true',
+          id: { [Op.ne]: currentUser.id }
+        },
+        attributes: ['id', 'username', 'email', 'role', 'department'],
+        order: [['username', 'ASC']],
+        limit: parseInt(limit)
+      });
+
+      res.json({
+        success: true,
+        data: users,
+        count: users.length
+      });
+    } catch (error) {
+      console.error('Error fetching assignable users:', error);
+      res.status(500).json({ error: 'Error fetching assignable users' });
+    }
+  }
+
+
+
+   async getAssignableUsersByBranch(req, res) {
+    try {
+      const currentUser = req.user;
+      const { limit = 1000, is_active = true } = req.query;
+
+      // Define assignable roles
+      const assignableRoles = ['Auditees', 'IT_Auditees', 'Inspection_Auditees'];
+
+      const branch_id = currentUser.branch_id;
+
+      if (!branch_id) {
+        return res.status(400).json({ error: 'Branch ID is required' });
+      }
+
+      // Build department filter based on current user's department
+      let departmentFilter;
+      if (currentUser.department === 'Inspection') {
+        // Inspection users can see users from Business and Inspection departments (exclude IT_Audit)
+        departmentFilter = { [Op.in]: ['Business', 'Inspection'] };
+      } else {
+        // All other departments: show users from same department only
+        departmentFilter = currentUser.department;
+      }
+
+      const users = await User.findAll({
+        where: {
+          branch_id: branch_id,
+          department: departmentFilter,
+          role: { [Op.in]: assignableRoles },
+          is_active: is_active === 'true',
+          id: { [Op.ne]: currentUser.id }
+        },
+        attributes: ['id', 'username', 'email', 'role', 'department'],
+        order: [['username', 'ASC']],
+        limit: parseInt(limit)
+      });
+
+      res.json({
+        success: true,
+        data: users,
+        count: users.length
+      });
+    } catch (error) {
+      console.error('Error fetching assignable users:', error);
+      res.status(500).json({ error: 'Error fetching assignable users' });
+    }
+  }
+
+
+  // Get user's associated branch
+  async getUserBranch(req, res) {
+    try {
+      const { userId } = req.params;
+
+      // Validate user ID
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+
+      const user = await User.findByPk(userId, {
+        attributes: ['id', 'username', 'branch_id'],
+        include: [
+          {
+            model: Branch,
+            as: 'branch',
+            attributes: ['id', 'branch_code', 'branch_name', 'is_active'],
+            required: false
+          }
+        ]
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (!user.branch) {
+        return res.status(404).json({ error: 'No branch assigned to this user' });
+      }
+
+      res.json({
+        success: true,
+        branch: user.branch
+      });
+    } catch (error) {
+      console.error('Error getting user branch:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+
+
+
 
 }
 

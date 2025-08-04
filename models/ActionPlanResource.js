@@ -1,36 +1,46 @@
-const { v4: uuidv4 } = require('uuid');
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const ActionPlanResource = sequelize.define('ActionPlanResource', {
+  class ActionPlanResource extends Model {
+    static associate(models) {
+      if (models.ActionPlan) {
+        ActionPlanResource.belongsTo(models.ActionPlan, {
+          foreignKey: 'action_plan_id',
+          as: 'actionPlan'
+        });
+      }
+    }
+  }
+
+  ActionPlanResource.init({
     resource_id: {
       type: DataTypes.UUID,
-      defaultValue: () => uuidv4(),
-      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
     },
     action_plan_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: false
     },
     resource_name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     quantity: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: true
     },
     cost: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: true,
-    },
+      allowNull: true
+    }
   }, {
+    sequelize,
+    modelName: 'ActionPlanResource',
     tableName: 'action_plan_resources',
-    timestamps: true,
+    underscored: true,
+    timestamps: true
   });
-
-  ActionPlanResource.associate = (models) => {
-    ActionPlanResource.belongsTo(models.ActionPlan, { foreignKey: 'action_plan_id' });
-  };
 
   return ActionPlanResource;
 }; 

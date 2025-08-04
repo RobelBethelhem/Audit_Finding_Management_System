@@ -35,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'escalation_notifications',
     timestamps: true,
+    underscored: true,
   });
 
   EscalationNotification.associate = (models) => {

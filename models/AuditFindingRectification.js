@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 'Pending',
       allowNull: false,
     },
+    reason:{
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     approved_by_id: {
       type: DataTypes.UUID,
       allowNull: true,
@@ -32,13 +36,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
-    reason: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
   }, {
     tableName: 'audit_finding_rectifications',
     timestamps: true,
+    underscored: true,
   });
 
   AuditFindingRectification.associate = (models) => {

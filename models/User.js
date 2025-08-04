@@ -33,15 +33,27 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: true,
     },
+    branch_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'branches',
+        key: 'id'
+      }
+    },
     role:{
       type: DataTypes.ENUM(
         'Admin', 
+        
+        //Business Roles
         'Resident_Auditors', 
         'Auditees', 
         'Audit_Supervisor', 
         'Auditee_Supervisor', 
         'Auditee_Super_Supervisor',
         'Audit_Director', 
+
+        //IT Audit Roles
         'Management',
         'IT_Auditors',
         'IT_Auditors_Supervisor',
@@ -49,6 +61,8 @@ module.exports = (sequelize, DataTypes) => {
         'IT_Auditees',
         'IT_Auditees_Supervisor',
         'IT_Auditees_Super_Supervisor',
+
+        //Inspection Roles
         'Inspection_Auditors',
         'Inspection_Auditors_Supervisor',
         'Inspection_Auditors_Director',
@@ -69,23 +83,15 @@ module.exports = (sequelize, DataTypes) => {
     }
     
   }, {
+    underscored: true, // This tells Sequelize to use snake_case column names
     tableName: 'users',
-    timestamps: true,
-    indexes: [
-      {
-        fields: ['username'],
-        name: 'idx_user_username'
-      },
-      {
-        fields: ['email'],
-        name: 'idx_user_email'
-      }
-    ]
+    underscored: true,
   });
 
   User.associate = (models) => {
     User.belongsTo(models.User, { as: 'mySupervisor', foreignKey: 'supervisor' });
     User.hasMany(models.User, { as: 'mySupervisees', foreignKey: 'supervisor' });
+    User.belongsTo(models.Branch, { as: 'branch', foreignKey: 'branch_id' });
     User.hasMany(models.AuditFinding, { as: 'createdAuditFindings', foreignKey: 'created_by_id' });
     User.hasMany(models.AuditFindingAssigned, { as: 'assignedFindings', foreignKey: 'assigned_to_id' });
     User.hasMany(models.AuditFindingEscalation, { as: 'escalatedFindings', foreignKey: 'escalated_to_id' });

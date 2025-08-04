@@ -109,6 +109,31 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     },
+    // New IT_Audit specific fields
+    vulnerability_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'system_vulnerabilities',
+        key: 'id'
+      }
+    },
+    compliance_gap_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'compliance_gaps',
+        key: 'id'
+      }
+    },
+    standard_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'relevant_standards',
+        key: 'id'
+      }
+    },
     created_by_id: {
       type: DataTypes.UUID,
       allowNull: true,
@@ -139,7 +164,30 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'AuditAmendmentHistory',
     tableName: 'audit_amendment_histories',
     underscored: true,
-    timestamps: false
+    timestamps: false,
+    indexes: [
+      {
+        fields: ['audit_finding_id'],
+        name: 'idx_amendment_audit_finding'
+      },
+      {
+        fields: ['amend_by_id'],
+        name: 'idx_amendment_amend_by'
+      },
+      // New indexes for IT_Audit fields
+      {
+        fields: ['vulnerability_id'],
+        name: 'idx_amendment_vulnerability'
+      },
+      {
+        fields: ['compliance_gap_id'],
+        name: 'idx_amendment_compliance_gap'
+      },
+      {
+        fields: ['standard_id'],
+        name: 'idx_amendment_standard'
+      }
+    ]
   });
 
   return AuditAmendmentHistory;

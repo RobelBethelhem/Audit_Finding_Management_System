@@ -66,10 +66,45 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: true,
     },
-    
+
+    // Reference number field
+    reference_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      unique: true
+    },
+
+    // New columns for IT_Audit department
+    vulnerability_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    compliance_gap_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    business_compliance_gap_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    standard_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    // Additional fields for audit finding management
+    due_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
   }, {
     tableName: 'audit_findings',
     timestamps: true,
+    underscored: true,
     indexes: [
       {
         fields: ['risk_level_id'],
@@ -96,8 +131,44 @@ module.exports = (sequelize, DataTypes) => {
     AuditFinding.hasMany(models.AuditFindingRectification, { foreignKey: 'finding_id' });
     AuditFinding.hasMany(models.AuditAmendmentHistory, { foreignKey: 'audit_finding_id' });
     AuditFinding.hasMany(models.ActionPlan, { foreignKey: 'audit_finding_id' });
+    AuditFinding.hasMany(models.AuditFindingEvidence, { foreignKey: 'audit_finding_id', as: 'evidences' });
+
+    // New associations for IT_Audit specific columns
+    AuditFinding.belongsTo(models.SystemVulnerability, { foreignKey: 'vulnerability_id', as: 'SystemVulnerability' });
+    AuditFinding.belongsTo(models.ComplianceGap, { foreignKey: 'compliance_gap_id', as: 'ComplianceGap' });
+    AuditFinding.belongsTo(models.BusinessComplianceGap, { foreignKey: 'business_compliance_gap_id', as: 'BusinessComplianceGap' });
+    AuditFinding.belongsTo(models.RelevantStandard, { foreignKey: 'standard_id', as: 'RelevantStandard' });
     AuditFinding.hasMany(models.AssignedNotification, { foreignKey: 'audit_finding_id' });
     AuditFinding.hasMany(models.EscalationNotification, { foreignKey: 'audit_finding_id' });
+
+    // Normalized branch assignment association
+    AuditFinding.hasOne(models.AuditFindingBranchAssignment, {
+      foreignKey: 'audit_finding_id',
+      as: 'branchAssignment'
+    });
+
+    // Assignment relationships are handled through AuditFindingAssigned table
+    // Branch assignments are handled through AuditFindingBranchAssignment table
+  };
+
+  // Static method to generate reference number
+  AuditFinding.generateReferenceNumber = async function(branchCode, department) {
+    const { Op } = require('sequelize');
+    const currentYear = new Date().getFullYear();
+
+    // Get the count of findings for this branch/department/year combination
+    const count = await this.count({
+      where: {
+        reference_number: {
+          [Op.like]: `${branchCode}/${department}/${currentYear}/%`
+        }
+      }
+    });
+
+    // Generate sequence number (6 digits, zero-padded)
+    const sequence = String(count + 1).padStart(6, '0');
+
+    return `${branchCode}/${department}/${currentYear}/${sequence}`;
   };
 
   return AuditFinding;

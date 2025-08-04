@@ -91,5 +91,10 @@ module.exports = (sequelize, DataTypes) => {
     ]
   });
 
+    ActionPlanResponsiblePerson.associate = (models) => {
+    ActionPlanResponsiblePerson.belongsTo(models.ActionPlan, { foreignKey: 'action_plan_id' });
+    ActionPlanResponsiblePerson.belongsTo(models.User, { foreignKey: 'user_id' });
+  };
+
   return ActionPlanResponsiblePerson;
 };

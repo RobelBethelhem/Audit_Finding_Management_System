@@ -3,9 +3,11 @@ const { User, TokenBlacklist } = require('../models'); // Assuming TokenBlacklis
 
 const authenticateJWT = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  console.log('Auth header:', authHeader); // Debug line
 
   if (authHeader) {
     const token = authHeader.split(' ')[1]; // Expecting "Bearer TOKEN"
+    console.log('Token extracted:', token ? token.substring(0, 10) + '...' : 'none'); // Debug line
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided.' });
@@ -13,7 +15,9 @@ const authenticateJWT = async (req, res, next) => {
 
     try {
       // 1. Verify token signature and expiration
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your JWT secret
+      console.log('Verifying with secret:', process.env.JWT_SECRET ? 'Secret exists' : 'No secret found'); // Debug line
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token decoded successfully:', decoded.id); // Debug line
 
       // 2. Check if the token is blacklisted
       const isBlacklisted = await TokenBlacklist.findOne({ where: { token: token } });

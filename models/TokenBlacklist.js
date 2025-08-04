@@ -27,6 +27,7 @@ module.exports = (sequelize) => {
   }, {
     tableName: 'token_blacklist',
     timestamps: true,
+    underscored: true,
     paranoid: false,
   });
 

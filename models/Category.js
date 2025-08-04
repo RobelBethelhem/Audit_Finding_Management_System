@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'categories',
     timestamps: true,
+    underscored: true,
     indexes: [
       {
         fields: ['category_name'],
