@@ -37,6 +37,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
 
+    currency: {
+      type: DataTypes.ENUM('ETB', 'USD', 'GBP', 'EUR'),
+      defaultValue: 'ETB',
+      allowNull: false,
+    },
+
     risk_level_id:{
       type: DataTypes.UUID,
       allowNull: true,

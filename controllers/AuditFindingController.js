@@ -54,12 +54,17 @@ class AuditFindingController extends BaseController {
           isAuthorized = true;
       }
 
-      // Rule 2: Supervisor/Director roles can modify findings created by specific auditor roles within their department
+      // Rule 2: Admin and Audit_Director can modify any finding across all departments
+      if (!isAuthorized && (currentRole === 'Admin' || currentRole === 'Audit_Director')) {
+          isAuthorized = true;
+      }
+
+      // Rule 3: Supervisor/Director roles can modify findings created by specific auditor roles within their department
       if (!isAuthorized) {
           switch (creatorRole) {
               case 'Resident_Auditors':
                   if (creatorDepartment === 'Business' && currentDepartment === 'Business' &&
-                      ['Audit_Supervisor', 'Audit_Director'].includes(currentRole)) {
+                      ['Audit_Supervisor'].includes(currentRole)) {
                       isAuthorized = true;
                   }
                   break;
@@ -72,12 +77,6 @@ class AuditFindingController extends BaseController {
               case 'Inspection_Auditors':
                   if (creatorDepartment === 'Inspection' && currentDepartment === 'Inspection' &&
                       ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director'].includes(currentRole)) {
-                      isAuthorized = true;
-                  }
-                  break;
-              // Rule 3: Admin can modify any finding
-              case 'Admin':
-                  if (currentRole === 'Admin') {
                       isAuthorized = true;
                   }
                   break;
@@ -886,8 +885,8 @@ class AuditFindingController extends BaseController {
 
       let isAuthorized = false;
 
-      // Rule 0: Admin users can approve/reject any rectification
-      if (currentRole === 'Admin') {
+      // Rule 0: Admin and Audit_Director can approve/reject any rectification across all departments
+      if (currentRole === 'Admin' || currentRole === 'Audit_Director') {
           isAuthorized = true;
       }
 
@@ -901,7 +900,7 @@ class AuditFindingController extends BaseController {
           switch (creatorRole) {
               case 'Resident_Auditors':
                   if (creatorDepartment === 'Business' && currentDepartment === 'Business' &&
-                      ['Audit_Supervisor', 'Audit_Director'].includes(currentRole)) {
+                      ['Audit_Supervisor'].includes(currentRole)) {
                       isAuthorized = true;
                   }
                   break;
@@ -914,11 +913,6 @@ class AuditFindingController extends BaseController {
               case 'Inspection_Auditors':
                   if (creatorDepartment === 'Inspection' && currentDepartment === 'Inspection' &&
                       ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director'].includes(currentRole)) {
-                      isAuthorized = true;
-                  }
-                  break;
-              case 'Admin':
-                  if (currentRole === 'Admin') {
                       isAuthorized = true;
                   }
                   break;
@@ -1808,9 +1802,12 @@ async findAll(req, res) {
       }
     }
 
+    // Cross-department director roles - can see ALL findings across ALL departments
+    const crossDepartmentDirectorRoles = ['Audit_Director'];
+
     // Group 1: Department-wide access roles (see ALL findings from their department)
     const departmentWideAccessRoles = [
-      'Audit_Supervisor', 'Audit_Director',
+      'Audit_Supervisor',
       'IT_Auditors_Supervisor', 'IT_Auditors_Director',
       'Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director'
     ];
@@ -1822,7 +1819,11 @@ async findAll(req, res) {
       'Inspection_Auditees_Supervisor', 'Inspection_Auditees_Super_Supervisor'
     ];
 
-    if (departmentWideAccessRoles.includes(currentUserRole)) {
+    // Audit_Director gets cross-department access (see ALL findings from ALL departments)
+    if (crossDepartmentDirectorRoles.includes(currentUserRole)) {
+      // No department filter - can see all findings
+      // baseWhereConditions remains empty for department filtering
+    } else if (departmentWideAccessRoles.includes(currentUserRole)) {
       // Department-wide access: See ALL findings from their department
       baseWhereConditions.push({
         '$createdBy.department$': currentUserDepartment
@@ -3002,9 +3003,12 @@ async getAuditFindingsReport(req, res) {
       }
     }
 
+    // Cross-department director roles - can see ALL findings across ALL departments
+    const crossDepartmentDirectorRoles = ['Audit_Director'];
+
     // Department-wide access roles
     const departmentWideAccessRoles = [
-      'Audit_Supervisor', 'Audit_Director',
+      'Audit_Supervisor',
       'IT_Auditors_Supervisor', 'IT_Auditors_Director',
       'Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director'
     ];
@@ -3015,7 +3019,10 @@ async getAuditFindingsReport(req, res) {
       'Inspection_Auditees_Supervisor', 'Inspection_Auditees_Super_Supervisor'
     ];
 
-    if (departmentWideAccessRoles.includes(currentUserRole)) {
+    // Audit_Director gets cross-department access (see ALL findings from ALL departments)
+    if (crossDepartmentDirectorRoles.includes(currentUserRole)) {
+      // No department filter - can see all findings
+    } else if (departmentWideAccessRoles.includes(currentUserRole)) {
       baseWhereConditions.push({
         '$createdBy.department$': currentUserDepartment
       });
