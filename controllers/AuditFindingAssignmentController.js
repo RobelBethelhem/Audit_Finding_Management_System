@@ -58,7 +58,7 @@ class AuditFindingAssignmentController {
       }
 
       // Validate assignee role
-      const allowedRoles = ['Auditees', 'IT_Auditees', 'Inspection_Auditees'];
+      const allowedRoles = ['Auditees', 'IT_Auditees', 'Inspection_Auditees', 'Auditee_Supervisor'];
       if (!allowedRoles.includes(assigneeUser.role)) {
         return res.status(400).json({ 
           error: 'Assignee must have one of these roles: Auditees, IT_Auditees, or Inspection_Auditees' 

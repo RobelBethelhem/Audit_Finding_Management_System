@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('../controllers/NotificationController');
-const authenticateJWT = require('../middleware/auth');
+const {authenticate, authorize} = require('../middleware/auth');
 
 // Apply authentication middleware to all routes
-router.use(authenticateJWT);
+router.use(authenticate);
 
 // Get all notifications for current user
 router.get('/', notificationController.getNotifications.bind(notificationController));

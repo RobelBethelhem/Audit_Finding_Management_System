@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ActionPlanController = require('../controllers/ActionPlanController');
-const  authenticateJWT  = require('../middleware/auth');
+const  {authenticate,authorize}  = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -60,30 +60,30 @@ const uploadFields = [
 
 // Routes for Action Plans
 // GET all action plans
-router.get('/', authenticateJWT, ActionPlanController.findAll);
+router.get('/', authenticate, ActionPlanController.findAll);
 
 // GET a single action plan by ID
-router.get('/:id', authenticateJWT, ActionPlanController.findById);
+router.get('/:id', authenticate, ActionPlanController.findById);
 
 // POST create a new action plan (requires authentication and specific authorization within the controller)
-router.post('/', authenticateJWT, upload.fields(uploadFields), ActionPlanController.create);
+router.post('/', authenticate, upload.fields(uploadFields), ActionPlanController.create);
 
 // PUT update an action plan (requires authentication and authorization)
-router.put('/:id', authenticateJWT, upload.fields(uploadFields), ActionPlanController.authorizeActionPlanAccess, ActionPlanController.updateActionPlan);
+router.put('/:id', authenticate, upload.fields(uploadFields), ActionPlanController.authorizeActionPlanAccess, ActionPlanController.updateActionPlan);
 
 // PUT update action plan status (requires authentication and specific status change authorization)
-router.put('/:id/status', authenticateJWT, ActionPlanController.authorizeActionPlanStatusChange, ActionPlanController.updateActionPlanStatus);
+router.put('/:id/status', authenticate, ActionPlanController.authorizeActionPlanStatusChange, ActionPlanController.updateActionPlanStatus);
 
 // PUT update action plan progress (requires authentication and authorization)
-router.put('/:id/progress', authenticateJWT, ActionPlanController.authorizeActionPlanAccess, ActionPlanController.updateActionPlanProgress);
+router.put('/:id/progress', authenticate, ActionPlanController.authorizeActionPlanAccess, ActionPlanController.updateActionPlanProgress);
 
 // GET amendment history for an action plan
-router.get('/:id/history', authenticateJWT, ActionPlanController.authorizeActionPlanAccess, ActionPlanController.getAmendmentHistory);
+router.get('/:id/history', authenticate, ActionPlanController.authorizeActionPlanAccess, ActionPlanController.getAmendmentHistory);
 
 // GET download evidence file by evidence ID
-router.get('/evidence/:evidenceId/download', authenticateJWT, ActionPlanController.downloadEvidence);
+router.get('/evidence/:evidenceId/download', authenticate, ActionPlanController.downloadEvidence);
 
 // GET download resource file by resource ID
-router.get('/resource/:resourceId/download', authenticateJWT, ActionPlanController.downloadResource);
+router.get('/resource/:resourceId/download', authenticate, ActionPlanController.downloadResource);
 
 module.exports = router;

@@ -2,7 +2,7 @@ const axios = require('axios');
 
 // Test analytics endpoints
 async function testAnalyticsEndpoints() {
-  const baseURL = 'http://localhost:3000/api';
+  const baseURL = 'https://aps2.zemenbank.com/api';
   
   // You'll need to replace this with a valid JWT token from your application
   const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk4MTYwMTdjLTY1ZjAtNGI1ZC05MmU1LTQwMTNkN2M0OTVmMCIsInVzZXJuYW1lIjoicm9iZWwuYXNmYXciLCJlbWFpbCI6InJvYmVsLmFzZmF3QHplbWVuYmFuay5jb20iLCJyb2xlIjoiQWRtaW4iLCJ0eXBlIjoiQnVzaW5lc3MiLCJpYXQiOjE3NTIzODU0MDgsImV4cCI6MTc1MjQ3MTgwOH0.LxBdnHIM10kdTwhAtFWaMZJPNXC8WXkZS6ddgC8mrY4';

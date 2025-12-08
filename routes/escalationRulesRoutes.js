@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EscalationRuleController = require('../controllers/EscalationRuleController');
-const authenticateJWT = require('../middleware/auth');
+const {authenticate, authorize} = require('../middleware/auth');
 
 // Middleware to check if user is admin
 const isAdmin = (req, res, next) => {
@@ -14,21 +14,21 @@ const isAdmin = (req, res, next) => {
 
 // All routes require authentication and admin privileges
 // GET all escalation rules
-router.get('/', authenticateJWT, isAdmin, EscalationRuleController.getAll);
+router.get('/', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.getAll);
 
 // GET a single escalation rule by ID
-router.get('/:id', authenticateJWT, isAdmin, EscalationRuleController.getById);
+router.get('/:id', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.getById);
 
 // POST create a new escalation rule
-router.post('/', authenticateJWT, isAdmin, EscalationRuleController.create);
+router.post('/', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.create);
 
 // PUT update an escalation rule
-router.put('/:id', authenticateJWT, isAdmin, EscalationRuleController.update);
+router.put('/:id', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.update);
 
 // DELETE an escalation rule
-router.delete('/:id', authenticateJWT, isAdmin, EscalationRuleController.delete);
+router.delete('/:id', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.delete);
 
 // PUT toggle active status of an escalation rule
-router.put('/:id/toggle-active', authenticateJWT, isAdmin, EscalationRuleController.toggleActive);
+router.put('/:id/toggle-active', authenticate, authorize('Admin', 'IT_Auditors_Supervisor','Inspection_Auditors_Supervisor','Audit_Supervisor', 'IT_Auditors_Director'), EscalationRuleController.toggleActive);
 
 module.exports = router;

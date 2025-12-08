@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const AuditFindingAssignmentController = require('../controllers/AuditFindingAssignmentController');
-const authenticateJWT = require('../middleware/auth');
+const {authenticate, authorize} = require('../middleware/auth');
 
 // All routes require authentication
-router.use(authenticateJWT);
+router.use(authenticate);
 
 // Get all assignments with pagination and filters
 router.get('/', AuditFindingAssignmentController.getAllAssignments);

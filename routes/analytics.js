@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const AnalyticsController = require('../controllers/AnalyticsController');
-const authenticateJWT = require('../middleware/auth');
+const {authenticate, authorize} = require('../middleware/auth');
 
 // Apply authentication middleware to all analytics routes
-router.use(authenticateJWT);
+router.use(authenticate);
 
 // Audit Findings Analytics Routes
 router.get('/audit-findings/status', AnalyticsController.getAuditFindingsByStatus);

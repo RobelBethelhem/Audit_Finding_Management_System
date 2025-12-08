@@ -66,6 +66,8 @@ class ActionPlanController extends BaseController {
       const submittedBy = await User.findByPk(actionPlan.submitted_by_id, {
         attributes: ['id', 'username', 'email', 'role', 'department'] // Include department
       });
+
+      console.log("Submitted By User: Submitted By User: Submitted By User: Submitted By User:", submittedBy);
       
       if (!submittedBy) {
         return res.status(404).json({ error: 'Submitter of the Action Plan not found.' });
@@ -137,12 +139,15 @@ class ActionPlanController extends BaseController {
       const currentUserRole = currentUser.role;
       const currentUserDepartment = currentUser.department;
 
+      console.log('Submitter Department: Submitter Department: Submitter Department:', submitterDepartment);
+      console.log('Current User Department: Current User Department: Current User Department:', currentUserDepartment);
+
       // Check for specific supervisor/director roles based on department
       if (submitterDepartment === 'Business' && currentUserDepartment === 'Business') {
         if (currentUserRole === 'Audit_Supervisor' || currentUserRole === 'Audit_Director') {
           isSupervisorOrDirector = true;
         }
-      } else if (submitterDepartment === 'Inspection' && currentUserDepartment === 'Inspection') {
+      } else if ((submitterDepartment === 'Inspection' || submitterDepartment === 'Business')&& currentUserDepartment === 'Inspection') {
         if (currentUserRole === 'Inspection_Auditors_Supervisor' || currentUserRole === 'Inspection_Auditors_Director') {
           isSupervisorOrDirector = true;
         }
@@ -775,7 +780,7 @@ async create(req, res) {
       amend_by_id: currentUser.id,
       action_plan: actionPlan.action_plan,
       responsible_persons_id: JSON.stringify(responsible_persons_ids),
-      timeline: actionPlan.timeline,
+      // timeline: actionPlan.timeline,
       status: actionPlan.status,
       amended_at: new Date()
     });
@@ -1022,7 +1027,7 @@ async create(req, res) {
             action_plan_id: actionPlan.action_plan_id,
             action_plan: updateData.action_plan || actionPlan.action_plan,
             responsible_persons_id: responsible_persons_ids.length > 0 ? JSON.stringify(responsible_persons_ids) : undefined,
-            timeline: updateData.timeline || actionPlan.timeline,
+            // timeline: updateData.timeline || actionPlan.timeline,
             status: updateData.status || actionPlan.status,
             amended_at: new Date()
           };
@@ -1205,7 +1210,7 @@ async create(req, res) {
         action_plan_id: actionPlan.action_plan_id,
         action_plan: actionPlan.action_plan,
         responsible_persons_id: JSON.stringify(responsiblePersons.map(rp => rp.user_id)),
-        timeline: actionPlan.timeline,
+        // timeline: actionPlan.timeline,
         status: finalStatus,
         amended_at: new Date()
       });
@@ -1349,7 +1354,7 @@ async create(req, res) {
         action_plan_id: actionPlan.action_plan_id,
         action_plan: actionPlan.action_plan,
         responsible_persons_id: JSON.stringify(responsiblePersons.map(rp => rp.user_id)),
-        timeline: actionPlan.timeline,
+        // timeline: actionPlan.timeline,
         status: actionPlan.status,
         progress_percentage: progress_percentage,
         progress_justification: progress_justification.trim(),

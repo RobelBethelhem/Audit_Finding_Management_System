@@ -113,6 +113,7 @@ module.exports = (sequelize, DataTypes) => {
         page = 1,
         limit = 10,
         inspectorId = null,
+        assigned_by_id = null,
         branchId = null,
         isActive = null,
         search = null,
@@ -126,6 +127,7 @@ module.exports = (sequelize, DataTypes) => {
       const whereClause = {};
 
       if (inspectorId) whereClause.inspector_id = inspectorId;
+      if (assigned_by_id) whereClause.assigned_by_id = assigned_by_id;
       if (branchId) whereClause.branch_id = branchId;
       if (isActive !== null) whereClause.is_active = isActive;
 
@@ -262,7 +264,7 @@ module.exports = (sequelize, DataTypes) => {
 
       // Validate inspector role
       const inspector = await this.sequelize.models.User.findByPk(inspector_id);
-      if (!inspector || inspector.role !== 'Inspection_Auditors') {
+      if (!inspector || (inspector.role !== 'Inspection_Auditors' && inspector.role !== 'IT_Auditors')) {
         throw new Error('Only Inspection_Auditors can be assigned to branches');
       }
 

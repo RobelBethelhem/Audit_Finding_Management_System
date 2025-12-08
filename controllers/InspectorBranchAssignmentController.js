@@ -10,7 +10,7 @@ class InspectorBranchAssignmentController {
       const currentUser = req.user;
       
       // Check if user has permission to view assignments
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({ 
           error: 'Only Inspection supervisors and directors can view inspector assignments' 
@@ -22,6 +22,7 @@ class InspectorBranchAssignmentController {
         limit = 10,
         search = '',
         inspector_id = '',
+        assigned_by_id = currentUser.id,
         branch_id = '',
         is_active = null,
         start_date_from = '',
@@ -34,6 +35,7 @@ class InspectorBranchAssignmentController {
         page: parseInt(page),
         limit: parseInt(limit),
         inspectorId: inspector_id || null,
+        assigned_by_id: assigned_by_id || currentUser.id,
         branchId: branch_id || null,
         isActive: is_active !== null ? is_active === 'true' : null,
         search: search || null,
@@ -67,7 +69,7 @@ class InspectorBranchAssignmentController {
       const currentUser = req.user;
       
       // Check if user has permission to create assignments
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({ 
           error: 'Only Inspection supervisors and directors can create inspector assignments' 
@@ -112,9 +114,9 @@ class InspectorBranchAssignmentController {
         return res.status(404).json({ error: 'Inspector not found' });
       }
 
-      if (inspector.role !== 'Inspection_Auditors') {
+      if (inspector.role !== 'Inspection_Auditors' && inspector.role !== 'IT_Auditors') {
         return res.status(400).json({ 
-          error: 'Only users with Inspection_Auditors role can be assigned to branches' 
+          error: 'Only users with Inspection_Auditors and IT_Auditors role can be assigned to branches' 
         });
       }
 
@@ -188,7 +190,7 @@ class InspectorBranchAssignmentController {
       const { assignmentId } = req.params;
       
       // Check if user has permission to update assignments
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({ 
           error: 'Only Inspection supervisors and directors can update inspector assignments' 
@@ -250,7 +252,7 @@ class InspectorBranchAssignmentController {
       const { assignmentId } = req.params;
       
       // Check if user has permission to deactivate assignments
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({ 
           error: 'Only Inspection supervisors and directors can deactivate inspector assignments' 
@@ -282,7 +284,13 @@ class InspectorBranchAssignmentController {
       const currentUser = req.user;
       
       // Check if user has permission
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = [
+        'Inspection_Auditors_Supervisor',
+        'Inspection_Auditors_Director',
+        'Admin',
+        'IT_Auditors_Supervisor',
+        'IT_Auditors_Director'
+        ];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({ 
           error: 'Only Inspection supervisors and directors can view available inspectors' 
@@ -292,8 +300,11 @@ class InspectorBranchAssignmentController {
       // Get all active Inspection_Auditors
       const inspectors = await User.findAll({
         where: {
-          role: 'Inspection_Auditors',
-          is_active: 'Active'
+          role: {
+            [Op.or]: ['Inspection_Auditors', 'IT_Auditors']
+          },
+          is_active: 'Active',
+          department: currentUser.department
         },
         attributes: ['id', 'username', 'email', 'department'],
         order: [['username', 'ASC']]
@@ -315,7 +326,7 @@ class InspectorBranchAssignmentController {
       const currentUser = req.user;
 
       // Check if user has permission
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role)) {
         return res.status(403).json({
           error: 'Only inspection supervisors/directors can view available branches'
@@ -349,7 +360,7 @@ class InspectorBranchAssignmentController {
       const currentUser = req.user;
 
       // Check if user has permission or is viewing their own assignments
-      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin'];
+      const authorizedRoles = ['Inspection_Auditors_Supervisor', 'Inspection_Auditors_Director', 'Admin', 'IT_Auditors_Supervisor', 'IT_Auditors_Director'];
       if (!authorizedRoles.includes(currentUser.role) && currentUser.id !== inspectorId) {
         return res.status(403).json({ 
           error: 'You can only view your own assignments' 

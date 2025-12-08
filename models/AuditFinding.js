@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false
     },
     criteria: {
@@ -34,12 +34,12 @@ module.exports = (sequelize, DataTypes) => {
 
     amount:{
       type: DataTypes.FLOAT,
-      allowNull: false,
+      allowNull: true,
     },
 
     risk_level_id:{
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
     
     category_id:{
@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
    
 
     status:{
-      type: DataTypes.ENUM('Pending', 'Under_Rectification', 'In_Progress', 'Reviewed', 'Escalated', 'Resolved'),
+      type: DataTypes.ENUM('Pending', 'Under_Rectification', 'In_Progress', 'Reviewed', 'Escalated', 'Resolved', 'Lesson_Taken'),
       defaultValue: 'Pending'
     },
 
@@ -151,25 +151,77 @@ module.exports = (sequelize, DataTypes) => {
     // Branch assignments are handled through AuditFindingBranchAssignment table
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // Static method to generate reference number
-  AuditFinding.generateReferenceNumber = async function(branchCode, department) {
-    const { Op } = require('sequelize');
-    const currentYear = new Date().getFullYear();
+  // AuditFinding.generateReferenceNumber = async function(branchCode, department) {
+  //   const { Op } = require('sequelize');
+  //   const currentYear = new Date().getFullYear();
 
-    // Get the count of findings for this branch/department/year combination
-    const count = await this.count({
-      where: {
-        reference_number: {
-          [Op.like]: `${branchCode}/${department}/${currentYear}/%`
-        }
+  //   // Get the count of findings for this branch/department/year combination
+  //   const count = await this.count({
+  //     where: {
+  //       reference_number: {
+  //         [Op.like]: `${branchCode}/${department}/${currentYear}/%`
+  //       }
+  //     }
+  //   });
+
+  //   // Generate sequence number (6 digits, zero-padded)
+  //   const sequence = String(count + 1).padStart(6, '0');
+
+  //   return `${branchCode}/${department}/${currentYear}/${sequence}`;
+  // };
+
+
+  AuditFinding.generateReferenceNumber = async function(branchCode, department, transaction) {
+  const { Op } = require('sequelize');
+  const currentYear = new Date().getFullYear();
+  const prefix = `${branchCode}/${department}/${currentYear}/`;
+
+  // Find the highest sequence number with row locking
+  const lastFinding = await this.findOne({
+    where: {
+      reference_number: {
+        [Op.like]: `${prefix}%`
       }
-    });
+    },
+    order: [['reference_number', 'DESC']],
+    lock: transaction ? transaction.LOCK.UPDATE : true,
+    transaction: transaction
+  });
 
-    // Generate sequence number (6 digits, zero-padded)
-    const sequence = String(count + 1).padStart(6, '0');
+  let sequence = 1;
+  if (lastFinding && lastFinding.reference_number) {
+    // Extract the last sequence number
+    const parts = lastFinding.reference_number.split('/');
+    const lastSequence = parseInt(parts[parts.length - 1], 10);
+    sequence = lastSequence + 1;
+  }
 
-    return `${branchCode}/${department}/${currentYear}/${sequence}`;
-  };
+  // Generate sequence number (6 digits, zero-padded)
+  const sequenceStr = String(sequence).padStart(6, '0');
+
+  return `${prefix}${sequenceStr}`;
+};
+
+
 
   return AuditFinding;
 }; 
