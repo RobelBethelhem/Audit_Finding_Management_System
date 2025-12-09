@@ -1908,9 +1908,12 @@ async findAll(req, res) {
       }
     }
 
+    // Cross-department roles that can see ALL findings (like Admin)
+    const fullAccessRoles = ['Admin', 'Audit_Director'];
+
     // Build the final where conditions
-    if (currentUserRole === 'Admin') {
-      // Admin can see all findings - no additional restrictions
+    if (fullAccessRoles.includes(currentUserRole)) {
+      // Admin and Audit_Director can see all findings - no additional restrictions
       // If we have search conditions, apply them directly
       if (searchConditions) {
         where[Op.or] = searchConditions;
@@ -3096,15 +3099,19 @@ async getAuditFindingsReport(req, res) {
       }
     }
 
+    // Cross-department roles that can see ALL findings (like Admin)
+    const fullAccessRoles = ['Admin', 'Audit_Director'];
+
     // Build final where conditions
     let finalWhere = {};
-    
-    if (currentUserRole === 'Admin') {
+
+    if (fullAccessRoles.includes(currentUserRole)) {
+      // Admin and Audit_Director can see all findings
       finalWhere = filterConditions;
     } else {
       if (baseWhereConditions.length > 0) {
         const hasFilters = Object.keys(filterConditions).length > 0;
-        
+
         if (hasFilters) {
           finalWhere = {
             [Op.and]: [
