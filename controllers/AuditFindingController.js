@@ -353,7 +353,7 @@ class AuditFindingController extends BaseController {
   try {
     var {
       title, description, criteria, cause, impact, recommendation,
-      amount, category_id, risk_rating_id, status,
+      amount, currency, category_id, risk_rating_id, status,
       initial_assigned_to_id,
       due_date, branch_id
     } = req.body;
@@ -363,6 +363,7 @@ class AuditFindingController extends BaseController {
     }
 
     console.log("📋 Received form data:", req.body);
+    console.log("💰 Currency received:", currency);
     console.log("📁 Received files:", req.files ? req.files.length : 0, "files");
 
     if (!title || !description || !criteria || !cause || !impact || !recommendation ||
@@ -379,6 +380,7 @@ class AuditFindingController extends BaseController {
       impact,
       recommendation,
       amount,
+      currency: currency || 'ETB',
       category_id,
       risk_rating_id,
       status: status || 'Pending',
@@ -560,6 +562,7 @@ class AuditFindingController extends BaseController {
     const updateData = { ...req.body };
 
     console.log("📋 Update - Received form data:", req.body);
+    console.log("💰 Update - Currency received:", req.body.currency);
     console.log("📁 Update - Received files:", req.files ? req.files.length : 0, "files");
 
     try {
